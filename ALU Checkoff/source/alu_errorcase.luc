@@ -10,13 +10,7 @@ module alu_errorcase (
     z = in[15:0]; //Take in the 16-bit input
     
     if(yesno == b1){
-      z = z + b0000000000000001;
-      //if(z[0] == b0){ //If LSB = 0, swap to 1
-      //  z[0] = b1;
-      //}
-      //if(z[0] == b1){ //If LSB = 1, swap to 0
-      // z[0] = b0;
-      //}
+      z = z + b0000000000000001; //Add 1 bit to the output if switch is flipped
     }
     
   out = z;
