@@ -1,0 +1,24 @@
+module alu_errorcase (
+    input yesno[1],
+    input in[16],
+    output out[16]
+  ) {
+  
+  sig z[16];
+  
+  always {
+    z = in[15:0]; //Take in the 16-bit input
+    
+    if(yesno == b1){
+      z = z + b0000000000000001;
+      //if(z[0] == b0){ //If LSB = 0, swap to 1
+      //  z[0] = b1;
+      //}
+      //if(z[0] == b1){ //If LSB = 1, swap to 0
+      // z[0] = b0;
+      //}
+    }
+    
+  out = z;
+  }
+}

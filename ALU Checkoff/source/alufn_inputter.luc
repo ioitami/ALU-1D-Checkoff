@@ -1,0 +1,30 @@
+module alufn_inputter (
+    
+    input in[2],
+    output out[6]
+  ) {
+  
+  const ADD = b000000;
+  const SUB = b000001;
+  //const MUL = b000010;
+  const CMPEQ = b110011;
+  
+  sig z[6];
+  
+  always {
+  //DEFAULT VALUE
+    z = ADD;
+    //CONDITIONALS BASED ON IO_DIP
+    if (in == b00){
+    z = ADD;
+    }
+    if (in == b01){
+    z = SUB;
+    }
+    if (in == b10){
+    z = CMPEQ;
+    }
+    
+    out = z;
+  }
+}
