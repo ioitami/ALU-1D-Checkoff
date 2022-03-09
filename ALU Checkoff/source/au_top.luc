@@ -52,7 +52,7 @@ module au_top (
     fn.in = io_dip[0][1:0];
     alutest.alufn = fn.out; //Take alufn from alufn_inputter
     
-    //SIMULATE ERROR CASE: use io_dip[1][0] to swap LSB (0 to 1 and 1 to 0)
+    //SIMULATE ERROR CASE: use io_dip[1][0] to add 1 bit to alu output
     err.yesno = io_dip[1][0];
     err.in = alutest.out;
     
