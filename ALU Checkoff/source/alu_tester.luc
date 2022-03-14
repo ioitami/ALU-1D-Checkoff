@@ -1,0 +1,154 @@
+module alu_tester (
+    input clk,  // clock
+    input rst,  // reset_conditioner
+    
+    input a[16],
+    input b[16],
+    input alufn[6],
+    input buttons[1],
+    
+    input button_state[1],
+    input manualswitch[1],
+    
+    output out[16],
+    output zvn[3],
+    
+    output testcase[2]
+  ) {
+  
+  alu alutest;
+  
+  const SLOWCLOCK_SIZE = 27;
+  counter slowClock(#SIZE(SLOWCLOCK_SIZE), .clk(clk), .rst(rst));
+  edge_detector slowClockEdge(#RISE(1), #FALL(0), .clk(clk));
+  
+  fsm controller(.clk(clk), .rst(rst)) = {S0, S1, S2, S3, S4};
+  
+  dff saveA[16](#INIT(0),.clk(clk), .rst(rst));
+  
+  //TESTCASE HARDCODED VALUES
+  //==================================
+  //TEST 1 (S0)
+  const TESTCASE1 = 2b00;
+  const TEST1A = b0000000000011011; //27
+  const TEST1B = b0000000000011011; //27
+  //TEST 2 (S1)
+  const TESTCASE2 = 2b01;
+  const TEST2A = b0111111111111111; //32767
+  const TEST2B = b0100000000000001; //16385
+  //TEST3 (S2)
+  const TESTCASE3 = 2b10;
+  const TEST3A = b1000000000000000; //-32768
+  const TEST3B = b1000000000000001; //-32767
+  //==================================
+  sig z[2];
+  
+  sig a_manual[16];
+  sig b_manual[16];
+  
+  always {
+     //DEFAULT VALUES
+     alutest.a = 16b0;
+     alutest.b = 16b0;
+     alutest.alufn_signal = alufn;   
+     z = 2b0;
+    
+     a_manual = 0;
+     b_manual = 0;
+    
+    slowClockEdge.in = slowClock.value[SLOWCLOCK_SIZE-1];
+    
+    
+    case(controller.q){
+      //TEST CASE 1 (AUTO)
+      //-----------------
+      controller.S0:
+      
+      alutest.a = TEST1A;
+      alutest.b = TEST1B;
+        
+      alutest.alufn_signal = alufn;  
+      z = TESTCASE1;
+          
+      if(manualswitch == 1b1){
+        controller.d = controller.S3;  
+        }
+          
+      else if (buttons[0] == 1b1 && slowClockEdge.out == b1 && manualswitch == 1b0){ //Moves to next state when button press during slowclock input 
+        controller.d = controller.S1;       
+        }
+      
+      //TEST CASE 2
+      //-----------------
+      controller.S1:
+      
+      alutest.a = TEST2A;
+      alutest.b = TEST2B;
+      alutest.alufn_signal = alufn; 
+      z = TESTCASE2; 
+      
+      if(manualswitch == 1b1){
+        controller.d = controller.S3;  
+        }    
+          
+      else if (buttons[0] == 1b1 && slowClockEdge.out == b1 && manualswitch == 1b0){ //Moves to next state when button press during slowclock input 
+        controller.d = controller.S2;       
+        }
+      
+      //TEST CASE 3
+      //-----------------
+      controller.S2:
+      
+      alutest.a = TEST3A;
+      alutest.b = TEST3B;
+      alutest.alufn_signal = alufn;
+      z = TESTCASE3; 
+          
+      if(manualswitch == 1b1){
+        controller.d = controller.S3;  
+        } 
+          
+      else if (buttons[0] == 1b1 && slowClockEdge.out == b1 && manualswitch == 1b0){ //Moves to next state when button press during slowclock input 
+        controller.d = controller.S0;       
+        }
+          
+      // MANUAL INPUTS
+      //-----------------
+        controller.S3: //Input A
+        
+        saveA.d = a; 
+        out = 16b0;
+        zvn = 3b0;
+        
+        if (button_state[0] == 1b1 && manualswitch == 1b1){
+          controller.d = controller.S4;
+        }
+          
+        else if (manualswitch == 1b0){ //Moves to auto 
+        controller.d = controller.S0;       
+        }
+          
+        controller.S4: //Input B
+        
+        alutest.b = b; 
+        alutest.a = saveA.q;
+        alutest.alufn_signal = alufn;
+        out = alutest.out;
+        zvn = alutest.zvn;
+                  
+        if (button_state[0] == 1b1 && manualswitch == 1b1){
+          controller.d = controller.S3;
+        }
+          
+        else if (manualswitch == 1b0){ //Moves to auto
+        controller.d = controller.S0;       
+        }
+      
+    }
+    testcase = z;
+    out = alutest.out;
+    zvn = alutest.zvn;
+    
+  }
+ 
+}
